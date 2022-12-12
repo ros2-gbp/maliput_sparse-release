@@ -2,6 +2,11 @@
 Changelog for package maliput_sparse
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.2.0 (2022-12-12)
+------------------
+* Builds up RoadGeometry out of parsed information. (`#40 <https://github.com/maliput/maliput_sparse/issues/40>`_)
+* Contributors: Franco Cipollone
+
 0.1.0 (2022-11-28)
 ------------------
 * Improves documentation. (`#43 <https://github.com/maliput/maliput_sparse/issues/43>`_)
