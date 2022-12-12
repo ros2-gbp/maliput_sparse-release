@@ -1,0 +1,36 @@
+ros-foxy-maliput-sparse (0.2.0-1focal) focal; urgency=high
+
+  * Builds up RoadGeometry out of parsed information. (#40 <https://github.com/maliput/maliput_sparse/issues/40>)
+  * Contributors: Franco Cipollone
+
+ -- Daniel Stonier <daniel.stonier@tri.global>  Mon, 12 Dec 2022 03:00:00 -0000
+
+ros-foxy-maliput-sparse (0.1.0-1focal) focal; urgency=high
+
+  * Improves documentation. (#43 <https://github.com/maliput/maliput_sparse/issues/43>)
+  * Uses RangeValidator within LaneGeometry. (#42 <https://github.com/maliput/maliput_sparse/issues/42>)
+  * Supports superelevation. (#38 <https://github.com/maliput/maliput_sparse/issues/38>)
+  * Supports passing custom centerline to the lane. (#37 <https://github.com/maliput/maliput_sparse/issues/37>)
+  * Fixes minor warning. (#36 <https://github.com/maliput/maliput_sparse/issues/36>)
+  * Update triage.yml (#35 <https://github.com/maliput/maliput_sparse/issues/35>)
+  * Overrides pendings RoadGeometry methods. (#29 <https://github.com/maliput/maliput_sparse/issues/29>)
+  * Builder for BranchPoints (#24 <https://github.com/maliput/maliput_sparse/issues/24>)
+  * Adds compare method for the LineStrings. (#28 <https://github.com/maliput/maliput_sparse/issues/28>)
+  * Lane::DoEvalMotionDerivatives. (#27 <https://github.com/maliput/maliput_sparse/issues/27>)
+  * Implements do_segment_bounds and DoToSegmentPositionBackend. (#23 <https://github.com/maliput/maliput_sparse/issues/23>)
+  * Builder API for the RoadGeometry (#11 <https://github.com/maliput/maliput_sparse/issues/11>)
+  * Implements Lane::DoToLanePositionBackend. (#22 <https://github.com/maliput/maliput_sparse/issues/22>)
+  * Adds r-bounds computations. (#19 <https://github.com/maliput/maliput_sparse/issues/19>)
+  * Adds a base class for RoadGeometry. (#21 <https://github.com/maliput/maliput_sparse/issues/21>)
+  * Expose lane_geometry header file as it is required by the builder API. (#20 <https://github.com/maliput/maliput_sparse/issues/20>)
+  * Adds Lane and implements LaneGeometry::WDot and LaneGeometry::WInverse. (#13 <https://github.com/maliput/maliput_sparse/issues/13>)
+  * Adds LaneGeometry class. (#8 <https://github.com/maliput/maliput_sparse/issues/8>)
+  * Rename maliput_sample folder to maliput_sparse. (#12 <https://github.com/maliput/maliput_sparse/issues/12>)
+  * Adds method for computing the centerline. (#9 <https://github.com/maliput/maliput_sparse/issues/9>)
+  * Adds LineString (#4 <https://github.com/maliput/maliput_sparse/issues/4>)
+  * Initial project skeleton. (#2 <https://github.com/maliput/maliput_sparse/issues/2>)
+  * Contributors: Agustin Alba Chicar, Franco Cipollone
+
+ -- Daniel Stonier <daniel.stonier@tri.global>  Mon, 28 Nov 2022 03:00:00 -0000
+
+
