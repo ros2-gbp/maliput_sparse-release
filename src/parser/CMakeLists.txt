@@ -4,6 +4,7 @@
 add_library(parser
   connection.cc
   lane.cc
+  validator.cc
 )
 
 add_library(maliput_sparse::parser ALIAS parser)
@@ -23,6 +24,7 @@ target_include_directories(
 target_link_libraries(parser
    PRIVATE
     maliput::common
+    maliput_sparse::geometry
 )
 
 install(TARGETS parser
