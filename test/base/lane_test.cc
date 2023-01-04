@@ -343,10 +343,7 @@ std::vector<ToLaneSegmentPositionTestCase> ToLaneSegmentPositionTestCases() {
                   },
                   // Outside boundary of the lane.
                   {
-                      // Because of the scaling of the boundaries' linestring the r value is slightly different.
-                      {50., 2.042240, 0.} /* lane_position */,
-                      {50., 2.042240, 100.} /* nearest_position */,
-                      7.9577602284126803, /* distance */
+                      {50., 2., 0.} /* lane_position */, {50., 2., 100.} /* nearest_position */, 8., /* distance */
                   },
               } /* expected_lane_position_result */,
               {
@@ -360,10 +357,7 @@ std::vector<ToLaneSegmentPositionTestCase> ToLaneSegmentPositionTestCases() {
                   },
                   // Outside boundary of the lane.
                   {
-                      // Because of the scaling of the boundaries' linestring the r value is slightly different.
-                      {50., 2.042240, 0.} /* lane_position */,
-                      {50., 2.042240, 100.} /* nearest_position */,
-                      7.9577602284126803, /* distance */
+                      {50., 2., 0.} /* lane_position */, {50., 2., 100.} /* nearest_position */, 8., /* distance */
                   },
               } /* expected_segment_lane_position_result */
           }};

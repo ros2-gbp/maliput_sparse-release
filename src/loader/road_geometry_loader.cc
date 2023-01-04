@@ -29,7 +29,10 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "maliput_sparse/loader/road_geometry_loader.h"
 
+#include <maliput/common/logger.h>
+
 #include "maliput_sparse/builder/builder.h"
+#include "maliput_sparse/parser/validator.h"
 
 namespace maliput_sparse {
 namespace loader {
@@ -55,6 +58,32 @@ RoadGeometryLoader::RoadGeometryLoader(std::unique_ptr<parser::Parser> parser,
 }
 
 std::unique_ptr<const maliput::api::RoadGeometry> RoadGeometryLoader::operator()() {
+  // Validates the parsed data before building the RoadGeometry.
+  const auto errors = parser::Validator(
+      parser_.get(),
+      {parser::Validator::Type::kLogicalLaneAdjacency, parser::Validator::Type::kGeometricalLaneAdjacency},
+      parser::ValidatorConfig{builder_configuration_.linear_tolerance})();
+  for (const auto& error : errors) {
+    switch (error.severity) {
+      case parser::Validator::Error::Severity::kError:
+        maliput::log()->error("[{}] {}", error.type, error.message);
+        break;
+      case parser::Validator::Error::Severity::kWarning:
+        maliput::log()->warn("[{}] {}", error.type, error.message);
+        break;
+      default:
+        MALIPUT_THROW_MESSAGE("Unknown parser::Validator::Error::Severity value: " + static_cast<int>(error.severity));
+    }
+  }
+
+  if (std::find_if(errors.begin(), errors.end(), [](const parser::Validator::Error& error) {
+        return error.severity == parser::Validator::Error::Severity::kError;
+      }) != errors.end()) {
+    MALIPUT_THROW_MESSAGE("Errors(" + std::to_string(static_cast<int>(errors.size())) +
+                          ") found during validation. Aborting.");
+  }
+
+  // Builds the RoadGeometry.
   const std::unordered_map<parser::Junction::Id, parser::Junction>& junctions = parser_->GetJunctions();
   const std::vector<parser::Connection>& connections = parser_->GetConnections();
 

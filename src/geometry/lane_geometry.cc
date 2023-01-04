@@ -57,7 +57,7 @@ double LaneGeometry::ArcLength() const { return centerline_.length(); }
 maliput::math::Vector3 LaneGeometry::W(const maliput::math::Vector3& prh) const {
   const double p = range_validator_(prh.x());
   // Obtains the point on the centerline (p, 0, 0).
-  const maliput::math::Vector3 on_centerline_point = utility::InterpolatedPointAtP(centerline_, p);
+  const maliput::math::Vector3 on_centerline_point = utility::InterpolatedPointAtP(centerline_, p, linear_tolerance_);
   // Calculates orientation of (p,r,h) basis at (p,0,0).
   const maliput::math::RollPitchYaw rpy = Orientation(p);
   // Rotates (0,r,h) and sums with mapped (p,0,0).
@@ -65,7 +65,7 @@ maliput::math::Vector3 LaneGeometry::W(const maliput::math::Vector3& prh) const 
 }
 
 maliput::math::Vector3 LaneGeometry::WDot(double p) const {
-  return utility::GetTangentAtP(centerline_, range_validator_(p));
+  return utility::GetTangentAtP(centerline_, range_validator_(p), linear_tolerance_);
 };
 
 maliput::math::Vector3 LaneGeometry::WDot(const maliput::math::Vector3& prh) const {
@@ -105,10 +105,10 @@ maliput::math::RollPitchYaw LaneGeometry::Orientation(double p) const {
   const double ground_diff = maliput::math::Vector2(diff.x(), diff.y()).norm();
   const double elevation_diff = diff.z();
   const double superelevation = std::atan2(elevation_diff, ground_diff);
-  return maliput::math::RollPitchYaw(
-      superelevation,
-      -std::atan2(utility::GetSlopeAtP(centerline_, p), utility::Get2DTangentAtP(centerline_, p).norm()),
-      utility::Get2DHeadingAtP(centerline_, p));
+  return maliput::math::RollPitchYaw(superelevation,
+                                     -std::atan2(utility::GetSlopeAtP(centerline_, p, linear_tolerance_),
+                                                 utility::Get2DTangentAtP(centerline_, p, linear_tolerance_).norm()),
+                                     utility::Get2DHeadingAtP(centerline_, p, linear_tolerance_));
 }
 
 maliput::math::RollPitchYaw LaneGeometry::Orientation(const maliput::math::Vector3& prh) const {
@@ -117,7 +117,8 @@ maliput::math::RollPitchYaw LaneGeometry::Orientation(const maliput::math::Vecto
 }
 
 maliput::math::Vector3 LaneGeometry::WInverse(const maliput::math::Vector3& xyz) const {
-  const utility::ClosestPointResult closest_centerline_point = utility::GetClosestPoint(centerline_, xyz);
+  const utility::ClosestPointResult closest_centerline_point =
+      utility::GetClosestPoint(centerline_, xyz, linear_tolerance_);
   const double p = closest_centerline_point.p;
 
   const maliput::math::Vector3 d_xyz = xyz - closest_centerline_point.point;
@@ -139,25 +140,26 @@ maliput::api::RBounds LaneGeometry::RBounds(double p) const {
   // Get distance from centerline to left and right.
   const maliput::math::Vector3 on_left = ToLateralPos(LineStringType::kLeftBoundary, p);
   const maliput::math::Vector3 on_right = ToLateralPos(LineStringType::kRightBoundary, p);
-  const maliput::math::Vector3 on_centerline = utility::InterpolatedPointAtP(centerline_, p);
+  const maliput::math::Vector3 on_centerline = utility::InterpolatedPointAtP(centerline_, p, linear_tolerance_);
   return {-(on_right - on_centerline).norm(), (on_left - on_centerline).norm()};
 }
 
 double LaneGeometry::FromCenterPToLateralP(const LineStringType& line_string_type, double p) const {
   p = range_validator_(p);
   MALIPUT_THROW_UNLESS(line_string_type != LineStringType::kCenterLine);
-  // Given p in centerline, let's compute p_at_a_border as: p_at_a_border = p / length * length_at_a_border.
-  // See https://github.com/maliput/maliput_sparse/issues/15 for more details.
-  const double lateral_length = line_string_type == LineStringType::kLeftBoundary ? left_.length() : right_.length();
-  const double p_equivalent = p * lateral_length / centerline_.length();
-  return std::clamp(p_equivalent, 0., lateral_length);
+  const maliput::math::Vector3 point_at_p = utility::InterpolatedPointAtP(centerline_, p, linear_tolerance_);
+  // The lateral p is the one that matches closest point in the lateral to the centerline at p.
+  const utility::ClosestPointResult closest_to_point = utility::GetClosestPointUsing2dProjection(
+      line_string_type == LineStringType::kLeftBoundary ? left_ : right_, point_at_p, linear_tolerance_);
+  return closest_to_point.p;
 }
 
 maliput::math::Vector3 LaneGeometry::ToLateralPos(const LineStringType& line_string_type, double p) const {
   p = range_validator_(p);
   MALIPUT_THROW_UNLESS(line_string_type != LineStringType::kCenterLine);
   const double p_lateral = FromCenterPToLateralP(line_string_type, p);
-  return utility::InterpolatedPointAtP(line_string_type == LineStringType::kLeftBoundary ? left_ : right_, p_lateral);
+  return utility::InterpolatedPointAtP(line_string_type == LineStringType::kLeftBoundary ? left_ : right_, p_lateral,
+                                       linear_tolerance_);
 }
 
 }  // namespace geometry
