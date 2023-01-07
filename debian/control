@@ -1,0 +1,12 @@
+Source: ros-foxy-maliput-sparse
+Section: misc
+Priority: optional
+Maintainer: Daniel Stonier <daniel.stonier@tri.global>
+Build-Depends: debhelper (>= 9.0.0), ros-foxy-ament-cmake, ros-foxy-ament-cmake-clang-format <!nocheck>, ros-foxy-ament-cmake-gmock <!nocheck>, ros-foxy-ament-cmake-gtest <!nocheck>, ros-foxy-maliput, ros-foxy-ros-workspace
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-foxy-maliput-sparse
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-foxy-maliput, ros-foxy-ros-workspace
+Description: Maliput sparse is a maliput backend built on top of waypoints without any analytical model of the surface
