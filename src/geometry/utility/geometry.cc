@@ -389,6 +389,8 @@ ClosestPointResult3d GetClosestPointUsing2dProjection(const LineString3d& line_s
   double length{};
   for (auto first = line_string.begin(), second = std::next(line_string.begin()); second != line_string.end();
        ++first, ++second) {
+    // If points are under numeric tolerance, skip segment.
+    if ((*first - *second).norm() < kEpsilon) continue;
     const maliput::math::Vector2 first_2d = To2D(*first);
     const maliput::math::Vector2 second_2d = To2D(*second);
     const maliput::math::Vector2 xy = To2D(xyz);
