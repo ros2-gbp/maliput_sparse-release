@@ -1,3 +1,26 @@
+## maliput_sparse (foxy) - 0.2.3-1
+
+The packages in the `maliput_sparse` repository were released into the `foxy` distro by running `/usr/bin/bloom-release maliput_sparse --ros-distro foxy` on `Wed, 15 Feb 2023 14:15:53 -0000`
+
+The `maliput_sparse` package was released.
+
+Version of package(s) in repository `maliput_sparse`:
+
+- upstream repository: https://github.com/maliput/maliput_sparse.git
+- release repository: https://github.com/ros2-gbp/maliput_sparse-release.git
+- rosdistro version: `0.2.2-1`
+- old version: `0.2.2-1`
+- new version: `0.2.3-1`
+
+Versions of tools used:
+
+- bloom version: `0.11.2`
+- catkin_pkg version: `0.5.2`
+- rosdep version: `0.22.1`
+- rosdistro version: `0.9.0`
+- vcstools version: `0.1.42`
+
+
 ## maliput_sparse (foxy) - 0.2.2-1
 
 The packages in the `maliput_sparse` repository were released into the `foxy` distro by running `/usr/bin/bloom-release maliput_sparse --ros-distro foxy` on `Sat, 07 Jan 2023 01:13:58 -0000`
