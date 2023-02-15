@@ -32,9 +32,12 @@
 #include <cmath>
 #include <initializer_list>
 #include <iterator>
+#include <map>
 #include <vector>
 
+#include <maliput/common/logger.h>
 #include <maliput/common/maliput_throw.h>
+#include <maliput/math/kd_tree.h>
 #include <maliput/math/vector.h>
 
 namespace maliput_sparse {
@@ -74,6 +77,89 @@ class LineString final {
   using iterator = typename std::vector<CoordinateT>::iterator;
   using const_iterator = typename std::vector<CoordinateT>::const_iterator;
 
+  /// A segment of a LineString.
+  /// A segment is defined by a:
+  /// - start index: index of the first coordinate of the segment.
+  /// - end index: index of the last coordinate of the segment, it is expected to be `start index + 1` as `LineString`'s
+  /// constructor
+  ///              builds the segments from consecutive coordinates.
+  struct Segment {
+    /// Defines an interval in the @f$ p @f$ value of the parametrized LineString.
+    /// The Less than operator is defined to allow the use of this struct as a key in a collection like std::map.
+    struct Interval {
+      /// Creates a Interval.
+      /// @param min_in Is the minimum value of the interval.
+      /// @param max_in Is the maximum value of the interval.
+      /// @throw maliput::common::assertion_error When `min_in` is greater than `max_in`.
+      Interval(double min_in, double max_in) : min(min_in), max(max_in) { MALIPUT_THROW_UNLESS(min_in <= max_in); }
+
+      /// Creates a Interval where
+      /// the minimum value is equal to the maximum value.
+      /// @param min_max Is the minimum and maximum value of the interval.
+      Interval(double min_max) : min(min_max), max(min_max) {}
+
+      /// Less than operator.
+      bool operator<(const Interval& rhs) const {
+        if (min < rhs.min) {
+          return max <= rhs.max ? true : false;
+        } else {
+          return false;
+        }
+      }
+
+      // Min p value.
+      double min{};
+      // Max p value.
+      double max{};
+    };
+
+    /// Start index of the segment.
+    std::size_t idx_start;
+    /// End index of the segment.
+    std::size_t idx_end;
+    /// Interval of the segment.
+    Segment::Interval p_interval;
+  };
+
+  using Segments = std::map<typename Segment::Interval, Segment>;
+
+  /// Extends the CoordinateT class with information about the index of the coordinate in the LineString and the
+  /// @f$ p @f$ value up-to the coordinate in the parametrized LineString.
+  /// Convenient to use with the KDTree.
+  class Point : public CoordinateT {
+   public:
+    /// Default constructor.
+    Point() = default;
+
+    /// Creates a Point.
+    /// @param coordinate The coordinate of the point.
+    /// @param idx The index of the coordinate in the LineString.
+    /// @param p The @f$ p @f$ value up-to the coordinate in the parametrized LineString.
+    /// @throw maliput::common::assertion_error When `p` is negative.
+    Point(const CoordinateT& coordinate, std::size_t idx, double p) : CoordinateT(coordinate), idx_(idx), p_(p) {
+      MALIPUT_THROW_UNLESS(p >= 0.);
+    }
+
+    /// Creates a point
+    /// @param coordinate The coordinate of the point.
+    explicit Point(const CoordinateT& coordinate) : CoordinateT(coordinate) {}
+
+    /// @return If provided via constructor, the index of the coordinate in the LineString, std::nullopt otherwise.
+    std::optional<std::size_t> idx() const { return idx_; }
+    /// @return If provided via constructor, the @f$ p @f$ value up-to the coordinate in the parametrized LineString,
+    /// std::nullopt otherwise.
+    std::optional<double> p() const { return p_; }
+
+    /// @return The underlying coordinate of the point.
+    const CoordinateT* coordinate() const { return this; }
+
+   private:
+    std::optional<std::size_t> idx_{};
+    std::optional<double> p_{};
+  };
+
+  using KDTree = maliput::math::KDTree<Point, CoordinateT::kDimension>;
+
   /// Constructs a LineString from a std::vector.
   ///
   /// This function calls LineString(coordinates.begin, coordinates.end)
@@ -101,8 +187,40 @@ class LineString final {
   /// @throws maliput::common::assertion_error When there are less than two points.
   template <typename Iterator>
   LineString(Iterator begin, Iterator end) : coordinates_(begin, end) {
+    // Remove consecutive points that are numerically the same.
+    // Duplicated points creates zero length segments, which leads to a wrong lookup when querying the segment map.
+    std::vector<std::size_t> remove_idx;
+    for (std::size_t idx{}; idx < coordinates_.size() - 1; ++idx) {
+      const double segment_length = DistanceFunction()(coordinates_[idx], coordinates_[idx + 1]);
+      if (segment_length <= std::numeric_limits<double>::epsilon()) {
+        maliput::log()->warn("LineString: consecutive points are numerically the same, removing duplicated point: {}",
+                             coordinates_[idx + 1]);
+        remove_idx.push_back(idx + 1);
+      }
+    }
+    // Remove the duplicated points.
+    for (auto it = remove_idx.rbegin(); it != remove_idx.rend(); ++it) {
+      coordinates_.erase(coordinates_.begin() + *it);
+    }
     MALIPUT_THROW_UNLESS(coordinates_.size() > 1);
-    length_ = ComputeLength();
+    // Fill up the segments collection and the points collection.
+    double p = 0;
+    points_.reserve(coordinates_.size());
+    for (std::size_t idx{}; idx < coordinates_.size() - 1; ++idx) {
+      const double segment_length = DistanceFunction()(coordinates_[idx], coordinates_[idx + 1]);
+      const typename Segment::Interval interval{p, p + segment_length};
+      // Add the segment.
+      segments_.emplace(interval, Segment{idx, idx + 1, interval});
+      // Add the point.
+      points_.push_back(Point(coordinates_[idx], idx, p));
+      p += segment_length;
+    }
+    // Add the last point.
+    points_.push_back(Point(coordinates_[coordinates_.size() - 1], coordinates_.size() - 1, p));
+    // Build the KDTree.
+    kd_tree_ = std::make_shared<KDTree>(points_.begin(), points_.end());
+    // Set the length.
+    length_ = p;
   }
 
   /// @return The first point in the LineString.
@@ -120,6 +238,16 @@ class LineString final {
 
   /// @return The accumulated length between consecutive points in this LineString by means of DistanceFunction.
   double length() const { return length_; }
+
+  /// Return the segments of this LineString.
+  /// @return A vector of segments.
+  const Segments& segments() const { return segments_; }
+
+  /// Return the points of this LineString.
+  const std::vector<Point>& points() const { return points_; }
+
+  /// Get KD Tree of the LineString.
+  const KDTree* kd_tree() const { return kd_tree_.get(); }
 
   /// @returns begin iterator of the underlying collection.
   iterator begin() { return coordinates_.begin(); }
@@ -139,17 +267,11 @@ class LineString final {
   }
 
  private:
-  // @return The accumulated Length of this LineString.
-  const double ComputeLength() const {
-    double accumulated_{0.};
-    for (size_t i = 0; i < size() - 1; ++i) {
-      accumulated_ += DistanceFunction()(at(i), at(i + 1));
-    }
-    return accumulated_;
-  }
-
   std::vector<CoordinateT> coordinates_{};
+  std::vector<Point> points_{};
+  Segments segments_{};
   double length_{};
+  std::shared_ptr<KDTree> kd_tree_;
 };
 
 // Convenient aliases.

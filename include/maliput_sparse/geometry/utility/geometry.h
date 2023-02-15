@@ -38,17 +38,24 @@ namespace geometry {
 namespace utility {
 
 /// Holds the result of #GetBoundPointsAtP method.
-/// @tparam CoordinateT The coordinate type.
-template <typename CoordinateT>
 struct BoundPointsResult {
-  typename LineString<CoordinateT>::const_iterator first;
-  typename LineString<CoordinateT>::const_iterator second;
+  std::size_t idx_start;
+  std::size_t idx_end;
   // Length up to first.
   double length;
 };
 
-using BoundPointsResult3d = BoundPointsResult<maliput::math::Vector3>;
-using BoundPointsResult2d = BoundPointsResult<maliput::math::Vector2>;
+/// Holds the result of #GetClosestPointToSegment method.
+/// @tparam CoordinateT The coordinate type.
+template <typename CoordinateT>
+struct ClosestPointToSegmentResult {
+  /// P coordinate in the line string matching the closest point.
+  double p;
+  /// Closest point.
+  CoordinateT point;
+  /// Distance between the closest point and the given point.
+  double distance;
+};
 
 /// Holds the result of #GetClosestPoint method.
 /// @tparam CoordinateT The coordinate type.
@@ -60,10 +67,14 @@ struct ClosestPointResult {
   CoordinateT point;
   /// Distance between the closest point and the given point.
   double distance;
+  /// Linestring's segment that contains the closest point.
+  typename LineString<CoordinateT>::Segment segment;
 };
 
 using ClosestPointResult3d = ClosestPointResult<maliput::math::Vector3>;
 using ClosestPointResult2d = ClosestPointResult<maliput::math::Vector2>;
+using ClosestPointToSegmentResult3d = ClosestPointToSegmentResult<maliput::math::Vector3>;
+using ClosestPointToSegmentResult2d = ClosestPointToSegmentResult<maliput::math::Vector2>;
 
 /// Computes a 3-dimensional centerline out of the @p left and @p right line string.
 ///
@@ -101,8 +112,7 @@ double GetSlopeAtP(const LineString3d& line_string, double p, double tolerance);
 /// @param tolerance tolerance.
 /// @throws maliput::common::assertion_error When `p ∉ [0., line_string.length()]`.
 template <typename CoordinateT = maliput::math::Vector3>
-BoundPointsResult<CoordinateT> GetBoundPointsAtP(const LineString<CoordinateT>& line_string, double p,
-                                                 double tolerance);
+BoundPointsResult GetBoundPointsAtP(const LineString<CoordinateT>& line_string, double p, double tolerance);
 
 /// Returns the heading of a @p line_string for a given @p p .
 /// @param line_string LineString to be computed the heading from.
@@ -128,14 +138,16 @@ maliput::math::Vector3 GetTangentAtP(const LineString3d& line_string, double p, 
 
 /// Gets the closest point in the @p segment to the given @p xyz point.
 /// @tparam CoordinateT The coordinate type of the @p segment .
-/// @param segment Segment to be computed the closest point from.
+/// @param start_segment_point Start point of the segment.
+/// @param end_segment_point End point of the segment.
 /// @param coordinate Point to be computed the closest point to.
 /// @param tolerance tolerance.
 /// @return A ClosestPointResult struct containing the closest point, the distance between the closest point and @p xyz
 /// and the p coordinate in the segment matching the closest point.
 template <typename CoordinateT = maliput::math::Vector3>
-ClosestPointResult<CoordinateT> GetClosestPointToSegment(const std::pair<CoordinateT, CoordinateT>& segment,
-                                                         const CoordinateT& coordinate, double tolerance);
+ClosestPointToSegmentResult<CoordinateT> GetClosestPointToSegment(const CoordinateT& start_segment_point,
+                                                                  const CoordinateT& end_segment_point,
+                                                                  const CoordinateT& coordinate, double tolerance);
 
 /// Gets the closest point in the @p line_string to the given @p xyz point.
 /// @param line_string LineString3d to be computed the closest point from.
