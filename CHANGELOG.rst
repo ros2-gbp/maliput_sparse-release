@@ -2,6 +2,13 @@
 Changelog for package maliput_sparse
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.2.3 (2023-02-15)
+------------------
+* Relies on GetClosestPoint for the GetClosestPointUsing2dProjection method. (`#53 <https://github.com/maliput/maliput_sparse/issues/53>`_)
+* Stores linestring's points in a kdtree. (`#52 <https://github.com/maliput/maliput_sparse/issues/52>`_)
+* Precomputes linestring's segments intervals (`#51 <https://github.com/maliput/maliput_sparse/issues/51>`_)
+* Contributors: Franco Cipollone
+
 0.2.2 (2023-01-06)
 ------------------
 * Fixes bug due to segments with zero length. (`#49 <https://github.com/maliput/maliput_sparse/issues/49>`_)
