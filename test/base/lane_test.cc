@@ -95,12 +95,14 @@ std::vector<LaneTestCase> LaneTestCases() {
               {
                   {50., 0., 0.},
                   {50., -2., -2.},
+                  {100. + (102. * std::sqrt(2.) / 2.), 0., 0.},
                   {100. + 102. * std::sqrt(2.), 0., 0.},
                   {100. + 102. * std::sqrt(2.) + 98., -1., 4.},
               } /* srh */,
               {
                   {50., 0., 100.},
                   {50., -2., 98.},
+                  {151., 51., 100.},
                   {202., 102., 100.},
                   {203., 200., 104.},
               } /* expected_backend_pos */,
@@ -109,6 +111,7 @@ std::vector<LaneTestCase> LaneTestCases() {
                   Rotation::FromRpy(0., 0., 0.),
                   Rotation::FromRpy(0., 0., M_PI / 4.),
                   Rotation::FromRpy(0., 0., M_PI / 2.),
+                  Rotation::FromRpy(0., 0., M_PI / 2.),
               } /* expected_rotation */,
               100. + 102. * std::sqrt(2.) + 98. /* expected_length */,
               {{
@@ -116,6 +119,11 @@ std::vector<LaneTestCase> LaneTestCases() {
                },
                {
                    {50., -2., -2.} /* lane_position */, {50., -2., 98.} /* nearest_position */, 0. /* distance */
+               },
+               {
+                   {100. + (102. * std::sqrt(2.) / 2.), 0., 0.} /* lane_position */,
+                   {151., 51., 100.} /* nearest_position */,
+                   0. /* distance */
                },
                {
                    {100. + 102. * std::sqrt(2.), 0., 0.} /* lane_position */,

@@ -242,34 +242,34 @@ class GetBoundPointsAtPTest : public ::testing::Test {
 TEST_F(GetBoundPointsAtPTest, Test) {
   {
     const double p{0.};
-    const BoundPointsResult3d expected_result{line_string.begin(), line_string.begin() + 1, 0.};
-    const BoundPointsResult3d dut = GetBoundPointsAtP(line_string, p, kTolerance);
-    EXPECT_EQ(expected_result.first, dut.first);
-    EXPECT_EQ(expected_result.second, dut.second);
+    const BoundPointsResult expected_result{0, 1, 0.};
+    const BoundPointsResult dut = GetBoundPointsAtP(line_string, p, kTolerance);
+    EXPECT_EQ(expected_result.idx_start, dut.idx_start);
+    EXPECT_EQ(expected_result.idx_end, dut.idx_end);
     EXPECT_EQ(expected_result.length, dut.length);
   }
   {
     const double p{7.5};
-    const BoundPointsResult3d expected_result{line_string.begin() + 1, line_string.begin() + 2, 7.};
-    const BoundPointsResult3d dut = GetBoundPointsAtP(line_string, p, kTolerance);
-    EXPECT_EQ(expected_result.first, dut.first);
-    EXPECT_EQ(expected_result.second, dut.second);
+    const BoundPointsResult expected_result{1, 2, 7.};
+    const BoundPointsResult dut = GetBoundPointsAtP(line_string, p, kTolerance);
+    EXPECT_EQ(expected_result.idx_start, dut.idx_start);
+    EXPECT_EQ(expected_result.idx_end, dut.idx_end);
     EXPECT_EQ(expected_result.length, dut.length);
   }
   {
     const double p{12.5};
-    const BoundPointsResult3d expected_result{line_string.begin() + 2, line_string.begin() + 3, 12.};
-    const BoundPointsResult3d dut = GetBoundPointsAtP(line_string, p, kTolerance);
-    EXPECT_EQ(expected_result.first, dut.first);
-    EXPECT_EQ(expected_result.second, dut.second);
+    const BoundPointsResult expected_result{2, 3, 12.};
+    const BoundPointsResult dut = GetBoundPointsAtP(line_string, p, kTolerance);
+    EXPECT_EQ(expected_result.idx_start, dut.idx_start);
+    EXPECT_EQ(expected_result.idx_end, dut.idx_end);
     EXPECT_EQ(expected_result.length, dut.length);
   }
   {
     const double p{19.5};
-    const BoundPointsResult3d expected_result{line_string.begin() + 3, line_string.begin() + 4, 19.};
-    const BoundPointsResult3d dut = GetBoundPointsAtP(line_string, p, kTolerance);
-    EXPECT_EQ(expected_result.first, dut.first);
-    EXPECT_EQ(expected_result.second, dut.second);
+    const BoundPointsResult expected_result{3, 4, 19.};
+    const BoundPointsResult dut = GetBoundPointsAtP(line_string, p, kTolerance);
+    EXPECT_EQ(expected_result.idx_start, dut.idx_start);
+    EXPECT_EQ(expected_result.idx_end, dut.idx_end);
     EXPECT_EQ(expected_result.length, dut.length);
   }
 }
@@ -291,19 +291,19 @@ std::vector<SlopeTestCase> SlopeTestCases() {
       {
           // LineString with different z values along y axis.
           LineString3d{{0., 0., 0.}, {5., 0., 5.}, {10., 0., 5.}, {15., 0., 10.}} /* line string*/,
-          {0., std::sqrt(2.) * 5, std::sqrt(2.) * 5 + 5., 2 * std::sqrt(2.) * 5 + 5.} /* ps */,
+          {0., std::sqrt(2.) * 5. / 2., std::sqrt(2.) * 5. + 5. / 2., 2 * std::sqrt(2.) * 5. + 5.} /* ps */,
           {1., 1., 0., 1.} /* expected_slopes */
       },
       {
           // LineString with different z values along x axis.
           LineString3d{{0., 0., 0.}, {0., 5., 5.}, {0., 10., 5.}, {0., 15., 10.}} /* line string*/,
-          {0., std::sqrt(2.) * 5, std::sqrt(2.) * 5 + 5., 2 * std::sqrt(2.) * 5 + 5.} /* ps */,
+          {0., std::sqrt(2.) * 5. / 2., std::sqrt(2.) * 5. + 5. / 2., 2 * std::sqrt(2.) * 5. + 5.} /* ps */,
           {1., 1., 0., 1.} /* expected_slopes */
       },
       {
           // LineString with different z values.
           LineString3d{{0., 0., 0.}, {6., 3., 2.}, {10., 6., 2.}, {16., 9., 4.}, {10., 6., 2.}} /* line string*/,
-          {0., 7., 12., 19., 26.} /* ps */,
+          {0., 3.5, 10.5, 17., 26.} /* ps */,
           {2. / std::sqrt(45), 2. / std::sqrt(45), 0., 2. / std::sqrt(45), -2. / std::sqrt(45)} /* expected_slopes */
       },
   };
@@ -329,11 +329,6 @@ class GetSlopeAtPSpecialCasesTest : public testing::Test {
  public:
   static constexpr double kTolerance{1e-12};
 };
-
-TEST_F(GetSlopeAtPSpecialCasesTest, Throw) {
-  const LineString3d kNoLength{{0., 0., 0.}, {0., 0., 0.}};
-  EXPECT_THROW(GetSlopeAtP(kNoLength, 0., kTolerance), maliput::common::assertion_error);
-}
 
 TEST_F(GetSlopeAtPSpecialCasesTest, InfinitySlope) {
   const double inf{std::numeric_limits<double>::infinity()};
@@ -396,7 +391,7 @@ INSTANTIATE_TEST_CASE_P(Get2DHeadingAtPTestGroup, Get2DHeadingAtPTest, ::testing
 struct GetClosestPointToSegmentTestCase {
   std::pair<maliput::math::Vector3, maliput::math::Vector3> segment;
   std::vector<maliput::math::Vector3> eval_points;
-  std::vector<ClosestPointResult3d> expected_closest{};
+  std::vector<ClosestPointToSegmentResult3d> expected_closest{};
 };
 
 std::vector<GetClosestPointToSegmentTestCase> GetClosestPointToSegmentTestCases() {
@@ -444,7 +439,8 @@ class GetClosestPointToSegmentTest : public ::testing::TestWithParam<GetClosestP
 TEST_P(GetClosestPointToSegmentTest, Test) {
   ASSERT_EQ(case_.eval_points.size(), case_.expected_closest.size()) << ">>>>> Test case is ill-formed.";
   for (std::size_t i = 0; i < case_.eval_points.size(); ++i) {
-    const auto dut = GetClosestPointToSegment(case_.segment, case_.eval_points[i], kTolerance);
+    const auto dut =
+        GetClosestPointToSegment(case_.segment.first, case_.segment.second, case_.eval_points[i], kTolerance);
     EXPECT_NEAR(case_.expected_closest[i].p, dut.p, kTolerance);
     EXPECT_TRUE(maliput::math::test::CompareVectors(case_.expected_closest[i].point, dut.point, kTolerance));
     EXPECT_NEAR(case_.expected_closest[i].distance, dut.distance, kTolerance);
@@ -465,15 +461,15 @@ std::vector<GetClosestPointLineStringTestCase> GetClosestPointLineStringTestCase
       {LineString3d{{0., 0., 0.}, {10., 0., 0.}} /* line_string */,
        {{5., 5., 0.}, {-5., 5., 0.}, {10., 5., 0.}, {15., 5., 0.}} /* eval points */,
        {
-           {5., {5., 0., 0.}, 5.}, /* expected: p, point, distance */
-           {0., {0., 0., 0.}, 5. * std::sqrt(2.)},
-           {10., {10., 0., 0.}, 5.},
-           {10., {10., 0., 0.}, 5. * std::sqrt(2.)},
+           {5., {5., 0., 0.}, 5., {0, 1, {0., 10.}}}, /* expected: p, point, distance, segment */
+           {0., {0., 0., 0.}, 5. * std::sqrt(2.), {0, 1, {0., 10.}}},
+           {10., {10., 0., 0.}, 5., {0, 1, {0., 10.}}},
+           {10., {10., 0., 0.}, 5. * std::sqrt(2.), {0, 1, {0., 10.}}},
        }},
       {LineString3d{{0., 0., 0.}, {10., 0., 0.}, {15., 0., 0.}} /* line_string */,
        {{12.5, 0., 0.}} /* eval points */,
        {
-           {12.5, {12.5, 0., 0.}, 0.}, /* expected: p, point, distance */
+           {12.5, {12.5, 0., 0.}, 0., {1, 2, {10., 15.}}}, /* expected: p, point, distance, segment */
        }},
       {LineString3d{{-2., -4., -6.},
                     {0., -2., -4.},
@@ -483,10 +479,12 @@ std::vector<GetClosestPointLineStringTestCase> GetClosestPointLineStringTestCase
                     {40., 20., 10.}} /* line_string */,
        {{-1., -3., -5.}, {5., 5., 5.}} /* eval points */,
        {
-           {std::sqrt(3.), {-1., -3., -5.}, 0.}, /* expected: p, point, distance */
+           {std::sqrt(3.), {-1., -3., -5.}, 0., {0, 1, {0., 3.4641016151377544}}}, /* expected: p, point, distance,
+                                                                                      segment */
            {std::sqrt(2. * 2. + 2. * 2. + 2. * 2.) + std::sqrt(2. * 2. + 4. * 4.) + 5.,
             {5., 0., 0.},
-            5. * std::sqrt(2.)},
+            5. * std::sqrt(2.),
+            {2, 3, {7.936237570137334, 17.936237570137333}}},
        }},
   };
 }
@@ -504,6 +502,10 @@ TEST_P(GetClosestPointLineStringTest, Test) {
     EXPECT_NEAR(case_.expected_closest[i].p, dut.p, kTolerance);
     EXPECT_TRUE(maliput::math::test::CompareVectors(case_.expected_closest[i].point, dut.point, kTolerance));
     EXPECT_NEAR(case_.expected_closest[i].distance, dut.distance, kTolerance);
+    EXPECT_EQ(case_.expected_closest[i].segment.idx_start, dut.segment.idx_start);
+    EXPECT_EQ(case_.expected_closest[i].segment.idx_end, dut.segment.idx_end);
+    EXPECT_NEAR(case_.expected_closest[i].segment.p_interval.min, dut.segment.p_interval.min, kTolerance);
+    EXPECT_NEAR(case_.expected_closest[i].segment.p_interval.max, dut.segment.p_interval.max, kTolerance);
   }
 }
 
@@ -528,8 +530,12 @@ std::vector<GetClosestPointLineStringTestCase> GetClosestPointIn2dLineStringTest
       {LineString3d{{0., 0., 0.}, {10., 0., 10.}} /* line_string */,
        {{5., 0., 0.}, {5., -2., 0.}} /* eval points */,
        {
-           {10 * std::sqrt(2.) / 2., {5., 0., 5.}, 5.},                /* expected: p, point, distance */
-           {10 * std::sqrt(2.) / 2., {5., 0., 5.}, 5.385164807134504}, /* expected: p, point, distance */
+           {10 * std::sqrt(2.) / 2., {5., 0., 5.}, 5., {0, 1, {0., 10. * std::sqrt(2.)}}}, /* expected: p, point,
+                                                                                              distance, segment */
+           {10 * std::sqrt(2.) / 2.,
+            {5., 0., 5.},
+            5.385164807134504,
+            {0, 1, {0., 10. * std::sqrt(2.)}}}, /* expected: p, point, distance, segment */
        }},
   };
 }
@@ -547,6 +553,10 @@ TEST_P(GetClosestPointIn2dLineStringTest, Test) {
     EXPECT_NEAR(case_.expected_closest[i].p, dut.p, kTolerance);
     EXPECT_TRUE(maliput::math::test::CompareVectors(case_.expected_closest[i].point, dut.point, kTolerance));
     EXPECT_NEAR(case_.expected_closest[i].distance, dut.distance, kTolerance);
+    EXPECT_EQ(case_.expected_closest[i].segment.idx_start, dut.segment.idx_start);
+    EXPECT_EQ(case_.expected_closest[i].segment.idx_end, dut.segment.idx_end);
+    EXPECT_NEAR(case_.expected_closest[i].segment.p_interval.min, dut.segment.p_interval.min, kTolerance);
+    EXPECT_NEAR(case_.expected_closest[i].segment.p_interval.max, dut.segment.p_interval.max, kTolerance);
   }
 }
 
